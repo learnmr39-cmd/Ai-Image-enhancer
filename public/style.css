@@ -1,0 +1,31 @@
+body {
+  font-family: Arial;
+  padding: 20px;
+  text-align: center;
+  background: #0b0b12;
+  color: white;
+}
+
+input {
+  margin-top: 20px;
+  width: 100%;
+}
+
+button {
+  padding: 14px;
+  margin-top: 15px;
+  width: 100%;
+  font-size: 16px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+button:active {
+  opacity: 0.8;
+}
+
+#result {
+  border-radius: 8px;
+}
