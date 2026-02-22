@@ -3,7 +3,6 @@ const multer = require("multer");
 const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
-const path = require("path");
 
 const app = express();
 
@@ -15,10 +14,16 @@ if (!fs.existsSync("uploads")) {
 
 const upload = multer({ dest: "uploads/" });
 
-const API_KEY = "4e46e8aa-34cb-4f47-9607-8804cac6277a";
+const API_KEY = process.env.DEEPAI_API_KEY;
 
 app.post("/enhance", upload.single("image"), async (req, res) => {
+
   try {
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
     const form = new FormData();
     form.append("image", fs.createReadStream(req.file.path));
 
@@ -38,11 +43,15 @@ app.post("/enhance", upload.single("image"), async (req, res) => {
     res.json({ output_url: response.data.output_url });
 
   } catch (err) {
-    console.log(err.message);
+
+    console.log("ERROR:", err.response?.data || err.message);
+
     res.status(500).json({ error: "Enhancement failed" });
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
 });
