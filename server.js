@@ -1,10 +1,12 @@
-const express = require("express");
-const multer = require("multer");
-const axios = require("axios");
-const FormData = require("form-data");
-const fs = require("fs");
+import express from "express";
+import multer from "multer";
+import fs from "fs";
+import Replicate from "replicate";
 
 const app = express();
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN
+});
 
 app.use(express.static("public"));
 
@@ -14,44 +16,36 @@ if (!fs.existsSync("uploads")) {
 
 const upload = multer({ dest: "uploads/" });
 
-const API_KEY = process.env.DEEPAI_API_KEY;
-
 app.post("/enhance", upload.single("image"), async (req, res) => {
-
   try {
 
     if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+      return res.status(400).json({ error: "No file" });
     }
 
-    const form = new FormData();
-    form.append("image", fs.createReadStream(req.file.path));
+    const imageBuffer = fs.readFileSync(req.file.path);
 
-    const response = await axios.post(
-      "https://api.deepai.org/api/torch-srgan",
-      form,
+    const output = await replicate.run(
+      "nightmareai/real-esrgan",
       {
-        headers: {
-          "api-key": API_KEY,
-          ...form.getHeaders()
+        input: {
+          image: imageBuffer,
+          scale: 2
         }
       }
     );
 
     fs.unlinkSync(req.file.path);
 
-    res.json({ output_url: response.data.output_url });
+    res.json({ output_url: output });
 
   } catch (err) {
-
-    console.log("ERROR:", err.response?.data || err.message);
-
+    console.log(err);
     res.status(500).json({ error: "Enhancement failed" });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log("Server running on " + PORT);
 });
