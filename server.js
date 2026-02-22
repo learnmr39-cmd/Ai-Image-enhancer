@@ -5,11 +5,11 @@ import Replicate from "replicate";
 
 const app = express();
 
+app.use(express.static("public"));
+
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN
 });
-
-app.use(express.static("public"));
 
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
@@ -18,19 +18,26 @@ if (!fs.existsSync("uploads")) {
 const upload = multer({ dest: "uploads/" });
 
 app.post("/enhance", upload.single("image"), async (req, res) => {
+
   try {
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+    if (!process.env.REPLICATE_API_TOKEN) {
+      return res.json({ error: "Missing API token" });
     }
 
-    const imageBuffer = fs.readFileSync(req.file.path);
+    if (!req.file) {
+      return res.json({ error: "No file uploaded" });
+    }
+
+    const imageBase64 = fs.readFileSync(req.file.path, {
+      encoding: "base64"
+    });
 
     const output = await replicate.run(
       "nightmareai/real-esrgan",
       {
         input: {
-          image: imageBuffer,
+          image: `data:image/png;base64,${imageBase64}`,
           scale: 2
         }
       }
@@ -41,9 +48,12 @@ app.post("/enhance", upload.single("image"), async (req, res) => {
     res.json({ output_url: output });
 
   } catch (error) {
-    console.log("ERROR:", error);
-    res.status(500).json({ error: "Enhancement failed" });
+
+    console.log("REAL ERROR:", error);
+
+    res.json({ error: "Enhancement failed" });
   }
+
 });
 
 const PORT = process.env.PORT || 3000;
