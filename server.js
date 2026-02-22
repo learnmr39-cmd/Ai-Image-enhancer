@@ -1,7 +1,7 @@
-import express from "express";
-import multer from "multer";
-import fs from "fs";
-import Replicate from "replicate";
+const express = require("express");
+const multer = require("multer");
+const fs = require("fs");
+const Replicate = require("replicate");
 
 const app = express();
 
@@ -21,23 +21,15 @@ app.post("/enhance", upload.single("image"), async (req, res) => {
 
   try {
 
-    if (!process.env.REPLICATE_API_TOKEN) {
-      return res.json({ error: "Missing API token" });
-    }
-
     if (!req.file) {
       return res.json({ error: "No file uploaded" });
     }
-
-    const imageBase64 = fs.readFileSync(req.file.path, {
-      encoding: "base64"
-    });
 
     const output = await replicate.run(
       "nightmareai/real-esrgan",
       {
         input: {
-          image: `data:image/png;base64,${imageBase64}`,
+          image: req.file.path,
           scale: 2
         }
       }
@@ -49,7 +41,7 @@ app.post("/enhance", upload.single("image"), async (req, res) => {
 
   } catch (error) {
 
-    console.log("REAL ERROR:", error);
+    console.log(error);
 
     res.json({ error: "Enhancement failed" });
   }
