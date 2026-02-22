@@ -15,7 +15,7 @@ if (!fs.existsSync("uploads")) {
 
 const upload = multer({ dest: "uploads/" });
 
-const API_KEY = "PASTE_YOUR_DEEPAI_API_KEY_HERE";
+const API_KEY = "4e46e8aa-34cb-4f47-9607-8804cac6277a";
 
 app.post("/enhance", upload.single("image"), async (req, res) => {
   try {
